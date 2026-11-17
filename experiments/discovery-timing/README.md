@@ -76,3 +76,9 @@ scheduling makes a wall-clock promise inappropriate.
 These results cover two startup loads of the existing save, not manual same-world
 reload, travel, all load orders or all third-party initialization behavior. Game
 was left running after run2. No save or profile file was modified by the test.
+
+## Current source: protocol version 2
+
+The native envelope and consumer version checks now use protocolversion2,
+modid, moddataversion1 and values. Original observations above were captured on
+the earlier revision; the independent push example provides current v2 validation.

@@ -1,4 +1,4 @@
-# GIMP test reference 0.0.1
+# GIMP v2 test reference (package 0.0.1)
 
 Two small, independent Gothic 1 Remake script mods demonstrate typed native data,
 per-key pushed snapshots, and consumer-owned delayed queues. They are learning
@@ -8,7 +8,7 @@ examples, not a production-ready interoperability library.
 
 - GIMP-Push-Provider-0.0.1.zip: publishes a random number every second and a string
   state every 1.3 seconds.
-- GIMP-Push-Consumer-0.0.1.zip: subscribes to both keys and displays their key, type
+- GIMP-Push-Consumer-0.0.1.zip: subscribes to both keys and displays their key
   and value in white text on black. A second line processes copied updates after
   three seconds, demonstrating that queued values survive later provider changes.
 - GIMP-Reference-Sources-0.0.1.zip: both mods' complete source, experiment notes,
@@ -42,7 +42,8 @@ Open Provider.as to follow publication; open Consumer.as to follow discovery,
 subscription, snapshot copying, queue processing and drawing. Extract the source
 ZIP into an empty folder, then run python tools/package_reference.py to rebuild
 all three ZIPs under Distribution/GIMP/Reference/0.0.1. Python is only needed for
-packaging, not for running either mod. Existing versioned ZIPs are never overwritten.
+packaging, not for running either mod. Existing ZIPs are not overwritten unless you explicitly pass --overwrite. The
+published package0.0.1 ZIPs were deliberately refreshed for protocolversion2.
 
 ## What was tested
 
@@ -51,10 +52,12 @@ numeric and string snapshots; consumer copies were processed after three seconds
 while newer events had already arrived. No JSON serialization or filesystem reads
 are used to exchange provider data.
 
-This version preserves the exact tested implementation: it uses provider/value,
-does not yet expose moddataversion, and includes type in notifications. The current
-protocol README instead describes modid/values, moddataversion and contract-based
-types. This is a transport reference, not a claim to implement every current rule.
+This reference uses protocolversion2, modid, values and moddataversion1.
+Notifications contain a key and its typed value, with no separate type field.
+The consumer knows random is a number and state is a string from the supported
+contract and checks the native value-entry type before reading. Package0.0.1
+archives were explicitly replaced with this v2 implementation; check SHA256SUMS.txt
+if you downloaded an earlier copy.
 
 The provider passes a native Blackboard snapshot through an existing delegate's
 component parameter. The snapshot is borrowed only for the synchronous callback;

@@ -15,10 +15,11 @@ The endpoint actor has the fixed actor tag `GIMP`. Its native Blackboard has:
 | Key | Native key type |
 |---|---|
 | protocol | String, GIMP |
-| protocolversion | Int, 1 |
-| provider | String, gimp.test.random |
+| protocolversion | Int, 2 |
+| moddataversion | Int, 1 |
+| modid | String, gimp.test.random |
 | generation | String, new endpoint GUID |
-| value | Object reference to a second UBlackboardComponent |
+| values | Object reference to a second UBlackboardComponent |
 
 The value Blackboard has `random` (Float) and `state` (String). These values are
 native typed storage, not JSON text. The float key stores 32-bit floating-point
@@ -74,3 +75,9 @@ Official API references:
 - https://alkimiainteractive.github.io/G1R-Modkit/script-reference/class_u_blackboard_data.html
 - https://alkimiainteractive.github.io/G1R-Modkit/script-reference/class_a_a_i_controller.html
 - https://alkimiainteractive.github.io/G1R-Modkit/script-reference/class_f_actor_component_activated_signature.html
+
+## Current source: protocol version 2
+
+The native envelope and consumer version checks now use protocolversion2,
+modid, moddataversion1 and values. Original observations above were captured on
+the earlier revision; the independent push example provides current v2 validation.

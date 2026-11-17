@@ -46,9 +46,9 @@ class UGIMP_PushConsumer : UGothicModExt_WorldSubsystem
         {
             if(!IsValid(Actor)) continue;
             auto Header=Cast<UBlackboardComponent>(Actor.GetComponentByClass(UBlackboardComponent));
-            if(!IsValid(Header) || Header.GetValueAsString(n"protocol")!="GIMP" || Header.GetValueAsInt(n"protocolversion")!=1 ||
-                Header.GetValueAsString(n"provider")!="gimp.test.push") continue;
-            auto Values=Cast<UBlackboardComponent>(Header.GetValueAsObject(n"value")); if(!IsValid(Values)) continue;
+            if(!IsValid(Header) || Header.GetValueAsString(n"protocol")!="GIMP" || Header.GetValueAsInt(n"protocolversion")!=2 || Header.GetValueAsInt(n"moddataversion")!=1 ||
+                Header.GetValueAsString(n"modid")!="gimp.test.push") continue;
+            auto Values=Cast<UBlackboardComponent>(Header.GetValueAsObject(n"values")); if(!IsValid(Values)) continue;
             Generation=Header.GetValueAsString(n"generation");
             NumberSignal=USceneComponent::Get(Values.GetOwner(),n"random");
             StringSignal=USceneComponent::Get(Values.GetOwner(),n"state");
@@ -69,20 +69,43 @@ class UGIMP_PushConsumer : UGothicModExt_WorldSubsystem
     FString Describe(FGIMP_PushRecord Record)
     {
         FString Value=Record.Type=="number" ? ""+Record.Number:Record.Text;
-        return "#"+Record.Sequence+"  key: "+Record.Key+"  type: "+Record.Type+"  value: "+Value;
+        return "#"+Record.Sequence+"  key: "+Record.Key+"  value: "+Value;
     }
     UFUNCTION() void OnPushedValue(UActorComponent Component,bool Reset)
     {
         auto Snapshot=Cast<UBlackboardComponent>(Component);
-        if(!IsValid(Snapshot)) { Invalid++; return; }
+        if(!HasType(Snapshot,n"key",UBlackboardKeyType_String) ||
+           !HasType(Snapshot,n"modid",UBlackboardKeyType_String) ||
+           !HasType(Snapshot,n"generation",UBlackboardKeyType_String) ||
+           !HasType(Snapshot,n"moddataversion",UBlackboardKeyType_Int) ||
+           !HasType(Snapshot,n"sequence",UBlackboardKeyType_Int)) { Invalid++; return; }
         FGIMP_PushRecord Record;
-        Record.Provider=Snapshot.GetValueAsString(n"provider"); Record.Generation=Snapshot.GetValueAsString(n"generation");
-        Record.Key=Snapshot.GetValueAsString(n"key"); Record.Type=Snapshot.GetValueAsString(n"type");
+        Record.Provider=Snapshot.GetValueAsString(n"modid"); Record.Generation=Snapshot.GetValueAsString(n"generation");
+        Record.Key=Snapshot.GetValueAsString(n"key");
+        // The supported moddataversion defines random as number and state as string.
+        Record.Type=Record.Key=="random" ? "number":(Record.Key=="state" ? "string":"unsupported");
         Record.Sequence=Snapshot.GetValueAsInt(n"sequence"); Record.ReceivedAt=Gameplay::GetRealTimeSeconds();
-        if(Record.Provider!="gimp.test.push" || Record.Generation!=Generation ||
+        if(Record.Provider!="gimp.test.push" || Record.Generation!=Generation || Snapshot.GetValueAsInt(n"moddataversion")!=1 ||
            (Record.Type!="number" && Record.Type!="string")) { Invalid++; return; }
-        if(Record.Type=="number") Record.Number=Snapshot.GetValueAsFloat(n"value"); else Record.Text=Snapshot.GetValueAsString(n"value");
+        if(Record.Type=="number")
+        {
+            if(!HasType(Snapshot,n"value",UBlackboardKeyType_Float)) { Invalid++; return; }
+            Record.Number=Snapshot.GetValueAsFloat(n"value");
+        }
+        else
+        {
+            if(!HasType(Snapshot,n"value",UBlackboardKeyType_String)) { Invalid++; return; }
+            Record.Text=Snapshot.GetValueAsString(n"value");
+        }
+        if(Queue.Num()>=64) Queue.RemoveAt(0);
         Notifications++; Queue.Add(Record); Latest=Describe(Record); RefreshDisplay();
+    }
+    bool HasType(UBlackboardComponent Store,FName KeyName,UClass Expected)
+    {
+        if(!IsValid(Store) || !IsValid(Store.DefaultBlackboardAsset)) return false;
+        for(auto Entry:Store.DefaultBlackboardAsset.Keys)
+            if(Entry.EntryName==KeyName) return IsValid(Entry.KeyType) && Entry.KeyType.IsA(Expected);
+        return false;
     }
     UFUNCTION() void ProcessQueue()
     {
@@ -90,6 +113,8 @@ class UGIMP_PushConsumer : UGothicModExt_WorldSubsystem
         {
             FGIMP_PushRecord Record=Queue[0]; Queue.RemoveAt(0); Processed++; Delayed=Describe(Record);
             FJsonObject Evidence;
+            Evidence.SetNumberField("protocolversion",2); Evidence.SetNumberField("moddataversion",1);
+            Evidence.SetBoolField("typeCarriedInNotification",false);
             Evidence.SetNumberField("notifications",Notifications); Evidence.SetNumberField("processedAfterDelay",Processed);
             Evidence.SetNumberField("queued",Queue.Num()); Evidence.SetNumberField("invalid",Invalid);
             Evidence.SetStringField("latest",Latest); Evidence.SetStringField("delayedCopy",Delayed);

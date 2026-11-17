@@ -32,8 +32,8 @@ class UGIMP_DiscoveryConsumer : UGothicModExt_WorldSubsystem
         {
             if(!IsValid(Candidate)) continue;
             auto Header=Cast<UBlackboardComponent>(Candidate.GetComponentByClass(UBlackboardComponent));
-            if(IsValid(Header) && Header.GetValueAsString(n"protocol")=="GIMP" && Header.GetValueAsInt(n"protocolversion")==1 &&
-               IsValid(Header.GetValueAsObject(n"value"))) { Valid++; IDs+=Header.GetValueAsString(n"provider")+","; }
+            if(IsValid(Header) && Header.GetValueAsString(n"protocol")=="GIMP" && Header.GetValueAsInt(n"protocolversion")==2 && Header.GetValueAsInt(n"moddataversion")==1 &&
+               IsValid(Header.GetValueAsObject(n"values"))) { Valid++; IDs+=Header.GetValueAsString(n"modid")+","; }
         }
         Trace+="time="+Gameplay::GetRealTimeSeconds()+" world="+GetWorld().GetPathName()+" event="+Event+" valid="+Valid+" providers="+IDs+"\n";
         FFileHelper::SaveStringToFile(Trace,System::GetProjectSavedDirectory()+"gimp-discovery-consumer.txt",FFileHelper::EEncodingOptions::ForceUTF8WithoutBOM);
@@ -79,9 +79,9 @@ class UGIMP_DiscoveryConsumer : UGothicModExt_WorldSubsystem
         {
             if(!IsValid(Actor)) continue;
             auto Header=Cast<UBlackboardComponent>(Actor.GetComponentByClass(UBlackboardComponent));
-            if(!IsValid(Header) || Header.GetValueAsString(n"protocol")!="GIMP" || Header.GetValueAsInt(n"protocolversion")!=1 ||
-                Header.GetValueAsString(n"provider")!="gimp.test.random") continue;
-            Values=Cast<UBlackboardComponent>(Header.GetValueAsObject(n"value"));
+            if(!IsValid(Header) || Header.GetValueAsString(n"protocol")!="GIMP" || Header.GetValueAsInt(n"protocolversion")!=2 || Header.GetValueAsInt(n"moddataversion")!=1 ||
+                Header.GetValueAsString(n"modid")!="gimp.test.random") continue;
+            Values=Cast<UBlackboardComponent>(Header.GetValueAsObject(n"values"));
             if(!IsValid(Values)) continue;
             Signal=USceneComponent::Get(Values.GetOwner(),n"random"); if(!IsValid(Signal)) continue;
             Generation=Header.GetValueAsString(n"generation"); EnvelopeValid=Generation.Len()>0;

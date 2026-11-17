@@ -13,8 +13,8 @@ USceneComponent signals for random (number) and state (string).
 
 On each publication the provider:
 1. Writes the new current value to its normal Blackboard.
-2. Creates a separate native Blackboard snapshot containing key, type, a typed
-   value entry, provider, generation and sequence.
+2. Creates a separate native Blackboard snapshot containing key, a typed value entry,
+   modid, moddataversion, generation and sequence. No type field is transmitted.
 3. Calls Signal.OnComponentActivated.Broadcast(Snapshot, false).
 4. Destroys the temporary snapshot's owner after synchronous callbacks return.
 
@@ -27,15 +27,14 @@ for notification transport.
 
 The consumer binds UFUNCTION callbacks with the native signature
 (UActorComponent Component, bool Reset). It casts Component to the native
-UBlackboardComponent, validates identity/type, and copies all fields into a
+UBlackboardComponent, validates identity and the native field type against the key contract, and copies all fields into a
 consumer-local record before returning. It does not cache or read the provider's
 current value store after discovery. Numeric and string publications are tested.
 
-The on-screen black panel uses white text and shows key, type, value and sequence
+The on-screen black panel uses white text and shows key, value and sequence
 for the latest received event, and for a consumer-owned copy processed at least
 three real-time seconds later. A timer drains the local queue; it does not poll
-the provider. The queue allows at most the few seconds of outstanding events in
-this controlled-rate test, but a production consumer would require a hard cap.
+the provider. The queue has a hard cap of64 records; the oldest entry is discarded if full.
 
 The notification payload is borrowed for the callback: consumers MUST copy it
 if they need to retain or queue the update. Retaining the native snapshot reference
@@ -75,3 +74,22 @@ They are not read as provider data by either mod.
 The exact tested source is also packaged as separate installable example mods and
 a complete source ZIP. See [reference0.0.1](../../reference/0.0.1/README.md) for
 installation, rebuilding and differences from the evolving protocol convention.
+
+## Current source: protocol version 2
+
+The envelope uses protocolversion2, modid, moddataversion1 and values. The signal
+still carries a borrowed native snapshot. Consumers derive the expected value
+type from the key (random:number, state:string) and validate the exposed native
+Blackboard schema before reading; the notification has no separate type field.
+The local diagnostic type is derived by the consumer, not transmitted; the
+on-screen panel shows only key and value (plus sequence/counters).
+DefaultBlackboardAsset explicitly exposes each store's native schema.
+Earlier result descriptions above refer to the original prototype revision.
+
+V2 validation: a fresh native startup reported7270 files with zero errors/warnings.
+Runtime evidence recorded protocolversion2, moddataversion1, no carried type field,
+numeric and string callbacks, zero invalid records, and delayed copies processed
+at3.10/3.01 seconds. The panel now displays key/value without the locally derived
+type label. The display-only hot reload was verified through changed live output;
+its separate diagnostic connection returned no file reports and is not counted as
+an additional compiler pass.

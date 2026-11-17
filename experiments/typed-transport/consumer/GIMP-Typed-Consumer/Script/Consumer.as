@@ -49,9 +49,9 @@ class UGIMP_TypedConsumer : UGothicModExt_WorldSubsystem
         {
             if(!IsValid(Actor)) continue;
             auto Header=Cast<UBlackboardComponent>(Actor.GetComponentByClass(UBlackboardComponent));
-            if(!IsValid(Header) || Header.GetValueAsString(n"protocol")!="GIMP" || Header.GetValueAsInt(n"protocolversion")!=1 ||
-                Header.GetValueAsString(n"provider")!="gimp.test.random") continue;
-            Values=Cast<UBlackboardComponent>(Header.GetValueAsObject(n"value"));
+            if(!IsValid(Header) || Header.GetValueAsString(n"protocol")!="GIMP" || Header.GetValueAsInt(n"protocolversion")!=2 || Header.GetValueAsInt(n"moddataversion")!=1 ||
+                Header.GetValueAsString(n"modid")!="gimp.test.random") continue;
+            Values=Cast<UBlackboardComponent>(Header.GetValueAsObject(n"values"));
             if(!IsValid(Values)) continue;
             Signal=USceneComponent::Get(Values.GetOwner(),n"random"); if(!IsValid(Signal)) continue;
             Generation=Header.GetValueAsString(n"generation"); EnvelopeValid=Generation.Len()>0;

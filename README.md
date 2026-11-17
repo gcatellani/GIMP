@@ -3,6 +3,8 @@
 GIMP aims to let Gothic 1 Remake mods exchange structured information without
 hardcoding other mods' script classes or requiring every provider to be installed. The idea is to achieve lower coupling.
 
+**Current protocol version: 2.** Version 1 is already used by released mods. The specification below describes v2; v1 endpoints must not be interpreted as v2.
+
 ## How it works
 
 ### Basics
@@ -30,7 +32,7 @@ The following illustrates the data structure. The actual data lives in Unreal ob
 ```json
 {
   "protocol": "GIMP",
-  "protocolversion": 1,
+  "protocolversion": 2,
   "modid": "exampleauthor.regeneration",
   "moddataversion": 1,
   "generation": "endpoint-guid",
@@ -43,7 +45,7 @@ The following illustrates the data structure. The actual data lives in Unreal ob
 }
 ```
 - `protocol` identifies that the mod supports GIMP
-- `protocolversion` specifies what format version of GIMP is supported
+- `protocolversion` specifies the GIMP format version (`2` for this specification).
 - `modid` identifies the data source and stays stable across updates.
 - `moddataversion` identifies the version of the mod's data contract, independently of its release version. Increase it for breaking changes to keys, types, units or meaning; optional new keys can remain compatible.
 - `generation` distinguishes endpoint instances; it is **not a shared game-session UUID**. Providers generate a new one when replacing their endpoint.
@@ -54,12 +56,14 @@ The following illustrates the data structure. The actual data lives in Unreal ob
 To consume GIMP-compatible data, a mod:
 
 1. Discovers providers the next gameplay tick after `HandleReadyForPlay()` by calling `Gameplay::GetAllActorsWithTag(n"GIMP", Endpoints)`. An optional second scan after 10 gameplay seconds catches delayed providers; it cannot guarantee finding providers that appear later still.
-2. Checks `modid` to identify sources.
-3. For providers the consumer wants to register to, it checks `protocol`, `protocolversion` and `moddataversion` to make sure they are compatible.
+2. Checks `protocol == "GIMP"` and `protocolversion == 2` before reading v2-specific fields or subscribing. Skip other versions unless a separate compatibility implementation supports them.
+3. Checks `modid` to identify sources and `moddataversion` to confirm that their data contract is supported.
 4. It then checks the key/data-store `values` for keys it wants to subscribe to.
 5. When a value changes, the provider informs the registered consumer of which key changed and provides the change in the form: `key`, `value`. The consumer can then either act on that information directly, defer it to a queue or discard the value and poll the data himself upon receiving the notification.
 
 ## Technical details
+
+The discovery tag stays `GIMP` for every protocol version; the endpoint's `protocolversion` decides how it must be read. `moddataversion` remains separate: adopting GIMP v2 does not by itself change a mod's data contract version.
 
 ### How data is stored
 
@@ -106,7 +110,7 @@ Try the small provider and consumer to see pushed values and delayed queue proce
 - [Complete source ZIP](reference/0.0.1/GIMP-Reference-Sources-0.0.1.zip)
 - [Installation and usage](reference/0.0.1/README.md), [browse the source](experiments/value-push), [checksums](reference/0.0.1/SHA256SUMS.txt)
 
-These are the exact tested examples, not a production-ready library. They retain earlier field names (`provider`/`value`), no `moddataversion` yet, and an explicit `type` field; the convention above uses `modid`/`values` and derives types from the data contract. Production allocation costs and save/world-transition cleanup still need validation.
+These examples use **protocolversion 2**, `modid`, `values` and `moddataversion`. Notification types come from the supported data contract; no separate `type` field is sent. The package0.0.1 downloads have been refreshed in place for v2. They are test references, not a production-ready library: allocation costs and save/world-transition cleanup still need validation.
 
 ## References
 GIMP is compatible with the [Official Gothic 1 Remake ModKit](https://github.com/AlkimiaInteractive/G1R-Modkit)

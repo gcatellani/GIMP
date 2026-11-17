@@ -145,3 +145,36 @@ Updated 2026-11-17 (Europe/Berlin).
 - Publication includes only docs/tool/reference downloads; excludes investigation
   fixtures/results and assets/nexus. Existing native compile/runtime evidence remains
   applicable because Provider.as/Consumer.as and descriptors have not changed.
+
+## Protocol version 2
+
+- User states external authors have released GIMPv1 mods and selected version2 for
+  the current protocol specification. README envelope now protocolversion2, with
+  explicit version checking before v2 fields/subscriptions. Tag remains GIMP.
+- moddataversion stays independent and example remains1. Historical experiments,
+  reference0.0.1 source/ZIPs and packaging tool preserve tested v1. README/index
+  clearly label those downloads v1, not a current v2 implementation.
+- Documentation-only change. No runtime edit/restart, package overwrite, new tag,
+  commit or push requested in this turn.
+
+## V2 examples and refreshed archives
+
+- User asked to update examples to v2, explicitly overwrite existing published ZIPs
+  and publish README/source/archives together. Active native typed/discovery/push
+  envelopes/checks now protocolversion2, modid, values, moddataversion1. Historical
+  JSON experiment staysv1. Package filenames/mod versions remain0.0.1 per in-place
+  overwrite request; old copies remain in Git history.
+- Push snapshots no longer contain type. Consumer derives random:number/state:string
+  from the supported contract, validates native schema entries using explicitly
+  exposed DefaultBlackboardAsset, and bounds queue to64 records. On-screen type
+  label removed after user asked why it remained; diagnostic type is local only.
+- Fresh dev27592 launched unsandboxed with two push mods and NoIntrosAndAutoResume
+  only. Native compiler7270 reports/no errors/warnings. V2 live numericseq107 and
+  stringseq109 processed after3.10/3.01s, invalid0, protocol2/moddata1, carriedtypefalse.
+  Display-only hot reload verified by output without type label; its diagnostic
+  connection emitted0reports, not claimed as another clean compile. Game kept running.
+- Updated docs/index and version checks for native typed/discovery sources; those
+  two smaller examples were not rerun separately. No HMI/profile/save/Vortex edits.
+- tools/package_reference.py now supports explicit --overwrite (default refuses).
+  Rebuild existing reference/0.0.1 ZIPs and matching Distribution outputs, validate
+  source-only reproducibility/checksums, then signed commit and push as requested.

@@ -28,18 +28,18 @@ class UGIMP_DiscoveryProvider : UGothicModExt_WorldSubsystem
         ValuesOwner.SetActorHiddenInGame(true); ValuesOwner.SetActorEnableCollision(false); ValuesOwner.SetActorTickEnabled(false);
         auto Header=Cast<UBlackboardData>(NewObject(Endpoint,UBlackboardData));
         AddKey(Header,n"protocol",UBlackboardKeyType_String);
-        AddKey(Header,n"protocolversion",UBlackboardKeyType_Int);
-        AddKey(Header,n"provider",UBlackboardKeyType_String);
+        AddKey(Header,n"protocolversion",UBlackboardKeyType_Int); AddKey(Header,n"moddataversion",UBlackboardKeyType_Int);
+        AddKey(Header,n"modid",UBlackboardKeyType_String);
         AddKey(Header,n"generation",UBlackboardKeyType_String);
-        AddKey(Header,n"value",UBlackboardKeyType_Object);
+        AddKey(Header,n"values",UBlackboardKeyType_Object);
         auto Data=Cast<UBlackboardData>(NewObject(ValuesOwner,UBlackboardData));
         AddKey(Data,n"random",UBlackboardKeyType_Float);
         AddKey(Data,n"state",UBlackboardKeyType_String);
         if(!Endpoint.UseBlackboard(Header,Envelope) || !ValuesOwner.UseBlackboard(Data,Values)) return;
-        Envelope.SetValueAsString(n"protocol","GIMP"); Envelope.SetValueAsInt(n"protocolversion",1);
-        Envelope.SetValueAsString(n"provider","gimp.test.random");
+        Envelope.SetValueAsString(n"protocol","GIMP"); Envelope.SetValueAsInt(n"protocolversion",2); Envelope.SetValueAsInt(n"moddataversion",1);
+        Envelope.SetValueAsString(n"modid","gimp.test.random");
         Envelope.SetValueAsString(n"generation",Guid::Conv_GuidToString(Guid::NewGuid()));
-        Envelope.SetValueAsObject(n"value",Values);
+        Envelope.SetValueAsObject(n"values",Values);
         RandomChanged=USceneComponent::Create(ValuesOwner,n"random");
         StateChanged=USceneComponent::Create(ValuesOwner,n"state");
         PublishRandom(); Endpoint.Tags.Add(n"GIMP"); Record("early-endpoint-published");
@@ -55,14 +55,14 @@ class UGIMP_DiscoveryProvider : UGothicModExt_WorldSubsystem
         auto Actor=AAIController::Spawn(); if(!IsValid(Actor)) return;
         Actor.SetActorHiddenInGame(true); Actor.SetActorEnableCollision(false); Actor.SetActorTickEnabled(false);
         auto Data=Cast<UBlackboardData>(NewObject(Actor,UBlackboardData));
-        AddKey(Data,n"protocol",UBlackboardKeyType_String); AddKey(Data,n"protocolversion",UBlackboardKeyType_Int);
-        AddKey(Data,n"provider",UBlackboardKeyType_String); AddKey(Data,n"generation",UBlackboardKeyType_String);
-        AddKey(Data,n"value",UBlackboardKeyType_Object);
+        AddKey(Data,n"protocol",UBlackboardKeyType_String); AddKey(Data,n"protocolversion",UBlackboardKeyType_Int); AddKey(Data,n"moddataversion",UBlackboardKeyType_Int);
+        AddKey(Data,n"modid",UBlackboardKeyType_String); AddKey(Data,n"generation",UBlackboardKeyType_String);
+        AddKey(Data,n"values",UBlackboardKeyType_Object);
         UBlackboardComponent Header;
         if(!Actor.UseBlackboard(Data,Header)) { Record("delayed-initialize-failed"); return; }
-        Header.SetValueAsString(n"protocol","GIMP"); Header.SetValueAsInt(n"protocolversion",1);
-        Header.SetValueAsString(n"provider",ProviderID); Header.SetValueAsString(n"generation",Guid::Conv_GuidToString(Guid::NewGuid()));
-        Header.SetValueAsObject(n"value",Values); Actor.Tags.Add(n"GIMP"); DelayedEndpoints.Add(Actor); Record(ProviderID+"-published");
+        Header.SetValueAsString(n"protocol","GIMP"); Header.SetValueAsInt(n"protocolversion",2); Header.SetValueAsInt(n"moddataversion",1);
+        Header.SetValueAsString(n"modid",ProviderID); Header.SetValueAsString(n"generation",Guid::Conv_GuidToString(Guid::NewGuid()));
+        Header.SetValueAsObject(n"values",Values); Actor.Tags.Add(n"GIMP"); DelayedEndpoints.Add(Actor); Record(ProviderID+"-published");
     }
     void AddKey(UBlackboardData Data,FName KeyName,UClass Type)
     {

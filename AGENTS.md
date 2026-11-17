@@ -3,7 +3,10 @@
 This repository contains the GIMP protocol proposal and memory-transport experiments.
 Read README.md and HANDOFF.md. Preserve the user's existing edits.
 
-- GIMP is a protocol, not a separately installable runtime mod.
+- GIMP is a protocol, not a separately installable runtime mod. Current specification
+  is protocolversion2; v1 is already released by third-party authors. Preserve published v1 reference archives; update active native examples to the
+  actual v2 layout when requested. Keep original v1 test observations labelled. The discovery
+  tag remains GIMP. Keep moddataversion independent of protocolversion.
 - Do not add a companion UUID module, shared writable registry or hard dependency
   between providers and consumers. Use native discoverable endpoints.
 - Dynamic telemetry must not be stored as changing FName tags.

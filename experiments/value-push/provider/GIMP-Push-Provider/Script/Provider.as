@@ -19,18 +19,19 @@ class UGIMP_PushProvider : UGothicModExt_WorldSubsystem
         ValuesOwner.SetActorHiddenInGame(true); ValuesOwner.SetActorEnableCollision(false); ValuesOwner.SetActorTickEnabled(false);
         auto Header=Cast<UBlackboardData>(NewObject(Endpoint,UBlackboardData));
         AddKey(Header,n"protocol",UBlackboardKeyType_String);
-        AddKey(Header,n"protocolversion",UBlackboardKeyType_Int);
-        AddKey(Header,n"provider",UBlackboardKeyType_String);
+        AddKey(Header,n"protocolversion",UBlackboardKeyType_Int); AddKey(Header,n"moddataversion",UBlackboardKeyType_Int);
+        AddKey(Header,n"modid",UBlackboardKeyType_String);
         AddKey(Header,n"generation",UBlackboardKeyType_String);
-        AddKey(Header,n"value",UBlackboardKeyType_Object);
+        AddKey(Header,n"values",UBlackboardKeyType_Object);
         auto Data=Cast<UBlackboardData>(NewObject(ValuesOwner,UBlackboardData));
         AddKey(Data,n"random",UBlackboardKeyType_Float);
         AddKey(Data,n"state",UBlackboardKeyType_String);
         if(!Endpoint.UseBlackboard(Header,Envelope) || !ValuesOwner.UseBlackboard(Data,Values)) return;
-        Envelope.SetValueAsString(n"protocol","GIMP"); Envelope.SetValueAsInt(n"protocolversion",1);
-        Envelope.SetValueAsString(n"provider","gimp.test.push");
+        Envelope.DefaultBlackboardAsset=Header; Values.DefaultBlackboardAsset=Data;
+        Envelope.SetValueAsString(n"protocol","GIMP"); Envelope.SetValueAsInt(n"protocolversion",2); Envelope.SetValueAsInt(n"moddataversion",1);
+        Envelope.SetValueAsString(n"modid","gimp.test.push");
         Generation=Guid::Conv_GuidToString(Guid::NewGuid()); Envelope.SetValueAsString(n"generation",Generation);
-        Envelope.SetValueAsObject(n"value",Values);
+        Envelope.SetValueAsObject(n"values",Values);
         RandomChanged=USceneComponent::Create(ValuesOwner,n"random");
         StateChanged=USceneComponent::Create(ValuesOwner,n"state");
         PublishRandom(); Endpoint.Tags.Add(n"GIMP");
@@ -59,15 +60,16 @@ class UGIMP_PushProvider : UGothicModExt_WorldSubsystem
         auto Owner=AAIController::Spawn(); if(!IsValid(Owner)) return;
         Owner.SetActorHiddenInGame(true); Owner.SetActorEnableCollision(false); Owner.SetActorTickEnabled(false);
         auto Schema=Cast<UBlackboardData>(NewObject(Owner,UBlackboardData));
-        AddKey(Schema,n"key",UBlackboardKeyType_String); AddKey(Schema,n"type",UBlackboardKeyType_String);
-        AddKey(Schema,n"provider",UBlackboardKeyType_String); AddKey(Schema,n"generation",UBlackboardKeyType_String);
+        AddKey(Schema,n"key",UBlackboardKeyType_String); AddKey(Schema,n"moddataversion",UBlackboardKeyType_Int);
+        AddKey(Schema,n"modid",UBlackboardKeyType_String); AddKey(Schema,n"generation",UBlackboardKeyType_String);
         AddKey(Schema,n"sequence",UBlackboardKeyType_Int);
         if(Type=="number") AddKey(Schema,n"value",UBlackboardKeyType_Float);
         else AddKey(Schema,n"value",UBlackboardKeyType_String);
         UBlackboardComponent Snapshot;
         if(!Owner.UseBlackboard(Schema,Snapshot)) { Owner.DestroyActor(); return; }
-        Sequence++; Snapshot.SetValueAsString(n"key",Key); Snapshot.SetValueAsString(n"type",Type);
-        Snapshot.SetValueAsString(n"provider","gimp.test.push"); Snapshot.SetValueAsString(n"generation",Generation);
+        Snapshot.DefaultBlackboardAsset=Schema;
+        Sequence++; Snapshot.SetValueAsString(n"key",Key); Snapshot.SetValueAsInt(n"moddataversion",1);
+        Snapshot.SetValueAsString(n"modid","gimp.test.push"); Snapshot.SetValueAsString(n"generation",Generation);
         Snapshot.SetValueAsInt(n"sequence",Sequence);
         if(Type=="number") Snapshot.SetValueAsFloat(n"value",Number); else Snapshot.SetValueAsString(n"value",Text);
         // This separate native snapshot is borrowed for the synchronous callback.
