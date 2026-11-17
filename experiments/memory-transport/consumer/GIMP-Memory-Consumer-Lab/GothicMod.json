@@ -1,0 +1,12 @@
+{
+  "name": "GIMP-Memory-Consumer-Lab",
+  "title": "GIMP-Memory-Consumer-Lab",
+  "author": "Gregory1985",
+  "modVersion": "0.0.1",
+  "dependencies": [],
+  "metadata": {
+    "gimp.protocol": "GIMP",
+    "gimp.protocolversion": "1",
+    "gimp.transport": "memory-lab.v1"
+  }
+}
