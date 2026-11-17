@@ -1,0 +1,8 @@
+{
+  "name": "GIMP-Discovery-Consumer",
+  "title": "GIMP-Discovery-Consumer",
+  "author": "Gregory1985",
+  "modVersion": "0.0.1",
+  "dependencies": [],
+  "loadOrder": "first"
+}

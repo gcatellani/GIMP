@@ -1,0 +1,8 @@
+{
+  "name": "GIMP-Discovery-Provider",
+  "title": "GIMP-Discovery-Provider",
+  "author": "Gregory1985",
+  "modVersion": "0.0.1",
+  "dependencies": [],
+  "loadOrder": "last"
+}
