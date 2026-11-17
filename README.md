@@ -1,53 +1,9 @@
 # Gothic 1 Remake Inter-Mod Protocol (GIMP)
 
-**Status: experimental protocol. Memory-only cross-mod exchange validated in-game;
-production transport and save-load lifecycle rules are not yet finalized.**
-
 GIMP aims to let Gothic 1 Remake mods exchange structured information without
 hardcoding other mods' script classes or requiring every provider to be installed.
 For example, a regeneration mod could publish health/mana regeneration states
 and rates for a HUD mod to display.
-
-## Current direction: exchange data in game memory
-
-Two independent test mods successfully exchanged a structured JSON payload held
-entirely in game memory. The provider published a discoverable, engine-managed
-endpoint. The consumer located it through native ModKit APIs and read its live
-payload without referencing the provider's script classes.
-
-**Both independent lab mods have empty dependency lists.** No shared registry,
-provider data file or additional infrastructure mod was involved.
-
-This establishes that a separate session-authority mod is not required merely to
-exchange data. It does **not** yet establish that session/lifecycle protection
-can safely be removed when loading saves or changing worlds.
-
-## What was actually tested
-
-The proof uses an invisible, noncolliding actor with a stable discovery tag. A
-hidden native `UTextRenderComponent` holds the JSON as nonlocalized `FText`.
-The consumer uses only native actor, component and JSON APIs.
-
-This component is an experimental carrier, **not a finalized production storage
-recommendation**. The payload is serialized JSON in memory, not a raw pointer
-or an arbitrary custom script struct shared between mods.
-
-| Live check | Result |
-|---|---|
-| Read string, number and boolean values | Passed |
-| Read updated values from the same endpoint | Passed |
-| Handle endpoint removal | Passed |
-| Discover/read a replacement endpoint | Passed |
-| Run with only the two independent lab mods | Passed |
-| Reference another mod's custom script classes | Not required |
-
-The isolated run produced **7,265 native compiler file reports, with no errors
-or warnings**. It completed in the main-menu world without loading or changing a
-savegame. A later dev run including NoIntrosAndAutoResume compiled with 7,270
-reports and no diagnostics; it is not additional proof of gameplay lifecycle behavior.
-
-See the [detailed validation record](docs/memory-transport-validation.md) and
-[reproducible lab source](experiments/memory-transport/README.md).
 
 ## Proposed endpoint data
 
@@ -62,10 +18,10 @@ rules are still proposals:
   "generation": "a-new-guid-for-this-endpoint-instance",
   "revision": 2,
   "value": {
-    "regeneration.v1.health.state": "active",
-    "regeneration.v1.health.ratePerSecond": 0.2,
-    "regeneration.v1.mana.state": "idle",
-    "regeneration.v1.mana.ratePerSecond": 0.5
+    "regeneration.health.state": "active",
+    "regeneration.health.ratePerSecond": 0.2,
+    "regeneration.mana.state": "idle",
+    "regeneration.mana.ratePerSecond": 0.5
   }
 }
 ```
@@ -77,8 +33,91 @@ rules are still proposals:
 - `value` holds documented key/value pairs. Consumers recognize supported contracts
   and ignore unknown fields.
 
-The lab's small test payload is not a completed regeneration integration or a
-frozen wire format.
+
+## How a consumer finds and reads compatible providers
+
+A consumer is a mod that reads data; a provider is a mod that publishes it.
+A mod can do both. **The consumer discovers live endpoints, rather than looking
+for a particular mod name or importing another mod's script classes.** Each
+provider creates an engine-managed actor in the current world, gives it a shared,
+stable discovery tag, and attaches a native component containing its JSON report.
+
+The validated lab uses the tag `GIMP.MemoryEndpoint.lab.v1` and a hidden
+`UTextRenderComponent` as the payload carrier. These are **experimental
+conventions**, not a finalized production transport. Both mods must agree on the
+discovery tag and carrier; the provider identity and changing values belong in
+the JSON, not in changing tags.
+
+The reading sequence is:
+
+1. **Discover endpoints.** Call `Gameplay::GetAllActorsWithTag()` with the agreed
+   tag. This returns native `AActor` references for matching actors in the current
+   world. No matches means no data is currently available; the consuming mod
+   continues to work without that optional feature. An installed or enabled mod
+   does not necessarily have a live endpoint yet.
+2. **Read each candidate's report.** Check `IsValid(actor)`, obtain its native
+   component with `GetComponentByClass(UTextRenderComponent)`, check that component
+   too, then read `GetText().ToString()`. This copies the JSON into the consumer's
+   own string. The consumer never casts the actor to the provider's custom class
+   and never writes to its component.
+3. **Check compatibility before using values.** Bound the payload size, parse it
+   with `FJsonObject.LoadFromString()`, and validate required fields and their
+   types. Require `protocol == "GIMP"` and a supported `protocolversion`. Read the
+   stable `provider` identity, `generation`, `revision` and `value` object.
+   Skip malformed or unsupported reports independently so one bad endpoint does
+   not prevent reading others.
+4. **Check the data contract.** A compatible envelope alone does not mean the
+   consumer understands every value. For example, a regeneration display looks
+   for the documented health/mana state and rate keys, checks their types and
+   allowed ranges, and ignores unrelated keys. A map-marker provider may speak
+   GIMP correctly without offering anything that regeneration display can use.
+   Contract identifiers and their versioning still need to be finalized.
+5. **Use and refresh supported data.** Keep each provider's data separate. Poll
+   the payload at an appropriate interval; `revision` identifies updates within
+   the same `generation`. A changed generation means a new endpoint instance,
+   so discard the previous instance's cached state. Recheck native validity and
+   rediscover periodically; clear unavailable data when an endpoint disappears
+   or the world changes. A production freshness/expiry policy is still to be
+   specified, since an existing actor alone does not prove its data is current.
+
+The core access path below is taken from the working lab. It illustrates lookup
+and parsing only; the compatibility and lifecycle checks above are also required
+for a production reader:
+
+```cpp
+TArray<AActor> Endpoints;
+Gameplay::GetAllActorsWithTag(n"GIMP.MemoryEndpoint.lab.v1", Endpoints);
+
+for (AActor Endpoint : Endpoints)
+{
+    if (!IsValid(Endpoint)) continue;
+    auto Payload = Cast<UTextRenderComponent>(
+        Endpoint.GetComponentByClass(UTextRenderComponent));
+    if (!IsValid(Payload)) continue;
+
+    FString Text = Payload.GetText().ToString();
+    FJsonObject Report;
+    if (Text.Len() >= 16384 || !Report.LoadFromString(Text)) continue;
+
+    // Validate the envelope and the supported value contract here.
+    // Read only the fields this consumer understands.
+}
+```
+
+The 16 KiB limit above is the lab's example bound, not a settled protocol limit.
+The lab polls every 250 ms and tests one provider; multi-provider handling and
+production scan costs remain unvalidated. Avoid a full actor scan every frame.
+
+`Plugin::GetEnabledPluginNames()` can separately list enabled plugins for
+optional diagnostics. **It is not needed to read these endpoints and is not a
+compatibility test:** the live report determines what a provider offers. No
+central registry file, advertised memory address, companion GIMP mod or hard
+provider/consumer dependency is needed for the demonstrated mechanism.
+
+See the [independent consumer source](experiments/memory-transport/consumer/GIMP-Memory-Consumer-Lab/Script/Consumer.as)
+and [provider source](experiments/memory-transport/provider/GIMP-Memory-Provider-Lab/Script/Provider.as)
+for the executed proof. Safe gameplay/save-load lifecycle handling remains to be
+validated before treating this as a production integration.
 
 ## Discovery and ownership
 
@@ -100,23 +139,6 @@ The protocol does not require players to install a separate GIMP package.
 
 Endpoint/session lifetime remains an open validation item. Sharing a process is
 not, by itself, proof that all objects are invalidated correctly during save loads.
-
-## Native ModKit APIs
-
-The experiment uses documented native capabilities:
-
-- `Gameplay::GetAllActorsWithTag()` for discovery.
-- `AActor.GetComponentByClass()` for a known native component type.
-- `UTextRenderComponent.SetText()` / `GetText()` for the experimental memory payload.
-- `FJsonObject.LoadFromString()` and field access for structured values.
-
-Enabled-plugin enumeration, package-directory lookup and descriptor reading were
-also checked against the official API reference. Descriptor metadata is a
-string-to-string map, so declarations must use flat string entries rather than
-nested objects. See [ModKit discovery validation](docs/modkit-discovery-validation.md).
-
-An in-memory endpoint may make a separate datafile declaration unnecessary;
-production discovery metadata has not yet been standardized.
 
 ## Example use case: regeneration
 
@@ -144,20 +166,6 @@ regeneration gameplay rules.
 - Multiple providers, rapid updates and discovery costs in large gameplay worlds.
 - A production carrier, including allocation and render-state overhead.
 - Compatibility/versioning rules and production integration examples.
-
-No production HMI integration has been changed to use this memory transport.
-HMI memory-transport integration remains paused. The isolated proof does not
-establish production gameplay lifecycle behavior.
-
-## Repository layout
-
-| Path | Purpose |
-|---|---|
-| `experiments/memory-transport/` | Independent provider/consumer proof source |
-| `docs/` | Validation evidence, limitations and historical proposals |
-
-The repository contains protocol documentation and development experiments, not a
-standalone installable GIMP mod. Do not distribute the lab mods as production releases.
 
 ## References
 

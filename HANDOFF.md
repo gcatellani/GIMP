@@ -14,10 +14,12 @@ Updated 2026-11-17 (Europe/Berlin).
   Artwork and unrelated mods/user data retained. HMI's obsolete dependency and
   abandoned file-consumer experiment were removed; memory implementation
   remains paused. No new game launch for cleanup.
-- User explicitly authorized replacing published history with this protocol-only
-  root snapshot and deleting tag 0.9. Publish with an exact old-main lease, verify
-  the remote refs, then expire local obsolete reflogs and prune unreachable objects.
-  GitHub may retain unreachable cached objects outside repository ref control.
+- Published the signed protocol-only root e365934, replaced remote main and
+  deleted tag 0.9 locally/remotely. Old local history was pruned and remote refs
+  verified. GitHub may retain unreachable cached objects outside ref control.
+- User shortened README themselves; preserved those edits and expanded only the
+  endpoint discovery/reading explanation, compatibility checks and lab source links.
+  Documentation-only update; no runtime changes or new gameplay validation.
 - Current dev21120 (last launched) uses memory labs and deployed NoIntros companion,
   no HMI or shared infrastructure. User requested timer0 and skip-continue=true;
   native settings were saved, no Vortex redeployment or regular game launch.
