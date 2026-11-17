@@ -1,0 +1,3 @@
+ac411c52e0650856a700df851acd605cdae6b875634e02d5a6a7c604b6b01929  GIMP-Push-Provider-0.0.1.zip
+dbc98879ed157344c757b9374c4e0557ac86499eca4407263f5e1acea15f456c  GIMP-Push-Consumer-0.0.1.zip
+e4ec1ed47bf1f71aa878d96f360ea5531a8df88264ffb76f9b65f409ef3cd41e  GIMP-Reference-Sources-0.0.1.zip

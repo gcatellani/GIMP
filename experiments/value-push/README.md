@@ -69,3 +69,9 @@ They are not read as provider data by either mod.
   investigation/value-push/. Display rendering still awaits the user's visual check.
 - Development PID26880 was launched visibly outside the sandbox with only these
   two test mods and NoIntrosAndAutoResume. It remains running for inspection.
+
+## Downloadable reference
+
+The exact tested source is also packaged as separate installable example mods and
+a complete source ZIP. See [reference0.0.1](../../reference/0.0.1/README.md) for
+installation, rebuilding and differences from the evolving protocol convention.

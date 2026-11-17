@@ -14,7 +14,10 @@ Read README.md and HANDOFF.md. Preserve the user's existing edits.
 - HMI integration remains paused until the user requests it. Do not modify its
   gameplay functionality, saves or profiles as part of protocol documentation work.
 - Do not launch/restart/deploy games, commit, push or tag unless requested.
-- Never commit credentials, private keys, raw crash dumps or release ZIPs.
+- Never commit credentials, private keys, raw crash dumps or ordinary release ZIPs.
+  User explicitly requested downloadable reference-test archives on GitHub: only
+  the small, versioned archives under reference/ may be committed for that purpose.
+  Keep matching packaging outputs under workspace Distribution/GIMP as well.
 - Generated artwork is separate; preserve assets unless explicitly requested otherwise.
 
 Checkout location is the user-requested workspace GIMP/ path. Do not move it.

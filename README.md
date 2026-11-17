@@ -97,7 +97,16 @@ Callbacks run synchronously. The snapshot is borrowed for the callback: **copy i
 
 Unsubscribe with `Signal.OnComponentActivated.Unbind(this, n"OnRandomChanged")` when no longer interested or before discarding a valid endpoint. Missing or unsupported providers simply mean unavailable data; the consumer must still work without them.
 
-The [test sources](experiments/README.md) demonstrate typed storage and pushed snapshots. They retain earlier field names (`provider`/`value`) and an explicit `type` field; the convention above uses `modid`/`values` and derives types from the data contract. Production allocation costs and save/world-transition cleanup still need validation.
+## Reference implementation
+
+Try the small provider and consumer to see pushed values and delayed queue processing in game:
+
+- [Provider ZIP](reference/0.0.1/GIMP-Push-Provider-0.0.1.zip)
+- [Consumer ZIP](reference/0.0.1/GIMP-Push-Consumer-0.0.1.zip)
+- [Complete source ZIP](reference/0.0.1/GIMP-Reference-Sources-0.0.1.zip)
+- [Installation and usage](reference/0.0.1/README.md), [browse the source](experiments/value-push), [checksums](reference/0.0.1/SHA256SUMS.txt)
+
+These are the exact tested examples, not a production-ready library. They retain earlier field names (`provider`/`value`), no `moddataversion` yet, and an explicit `type` field; the convention above uses `modid`/`values` and derives types from the data contract. Production allocation costs and save/world-transition cleanup still need validation.
 
 ## References
 GIMP is compatible with the [Official Gothic 1 Remake ModKit](https://github.com/AlkimiaInteractive/G1R-Modkit)

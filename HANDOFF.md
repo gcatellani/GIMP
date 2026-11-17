@@ -126,3 +126,22 @@ Updated 2026-11-17 (Europe/Berlin).
   Historical experiments keep actual tested field names/type for honest evidence;
   index/root README state the difference from the current protocol direction.
 - Documentation/source publication only: no runtime changes, restart or deployment.
+
+## Downloadable reference0.0.1
+
+- User requested packaged provider/consumer, source alongside ZIPs, README links
+  and GitHub publication. Exact tested value-push runtime source remains unchanged.
+- Added tools/package_reference.py: separate installable AngelScript provider and
+  consumer ZIPs, full source ZIP, SHA256 manifest, deterministic metadata, no overwrite.
+  Normal outputs are workspace Distribution/GIMP/Reference/0.0.1. User explicitly
+  requested downloadable reference ZIPs on GitHub, so narrowly except these small
+  archives under reference/0.0.1 from ordinary no-release-ZIPs-in-Git policy.
+- Reference guide covers install/uninstall, live compilation, optional AutoResume,
+  borrowed payload copying, prototype limits and earlier schema/type differences.
+  Root README links ZIPs, guide, browsable source and checksums. Other artwork kept.
+- Verified CRC/byte identity/runtime descriptors/README links, extracted source-only
+  bundle and rebuilt all three archives byte-identically. Provider3594 bytes,
+  consumer4364 bytes, source11832 bytes. No game launch/restart/deployment or tag.
+- Publication includes only docs/tool/reference downloads; excludes investigation
+  fixtures/results and assets/nexus. Existing native compile/runtime evidence remains
+  applicable because Provider.as/Consumer.as and descriptors have not changed.
