@@ -28,7 +28,7 @@ rules are still proposals:
 
 - `provider` identifies the data source and stays stable across updates.
 - `generation` distinguishes endpoint instances; it is **not a shared game-session
-  UUID**. The experiment generated a new one when replacing the endpoint.
+  UUID**. Providers generate a new one when replacing their endpoint.
 - `revision` identifies a changed payload within an endpoint instance.
 - `value` holds documented key/value pairs. Consumers recognize supported contracts
   and ignore unknown fields.
@@ -42,15 +42,19 @@ for a particular mod name or importing another mod's script classes.** Each
 provider creates an engine-managed actor in the current world, gives it a shared,
 stable discovery tag, and attaches a native component containing its JSON report.
 
-The validated lab uses the tag `GIMP.MemoryEndpoint.lab.v1` and a hidden
-`UTextRenderComponent` as the payload carrier. These are **experimental
-conventions**, not a finalized production transport. Both mods must agree on the
-discovery tag and carrier; the provider identity and changing values belong in
-the JSON, not in changing tags.
+All providers use the actor tag **`GIMP`**. Multiple mods can use this same tag
+on their own endpoint actors; discovery returns every matching actor. Each
+provider is identified by the `provider` field inside its JSON report.
+
+The current payload carrier is a hidden `UTextRenderComponent`. Consumers and
+providers must agree on that carrier; its suitability for production still
+requires validation. Provider identities and changing values belong in the JSON,
+not in changing tags. Protocol versions are declared inside the report, not in
+the discovery tag.
 
 The reading sequence is:
 
-1. **Discover endpoints.** Call `Gameplay::GetAllActorsWithTag()` with the agreed
+1. **Discover endpoints.** Call `Gameplay::GetAllActorsWithTag()` with the `GIMP`
    tag. This returns native `AActor` references for matching actors in the current
    world. No matches means no data is currently available; the consuming mod
    continues to work without that optional feature. An installed or enabled mod
@@ -80,13 +84,12 @@ The reading sequence is:
    or the world changes. A production freshness/expiry policy is still to be
    specified, since an existing actor alone does not prove its data is current.
 
-The core access path below is taken from the working lab. It illustrates lookup
-and parsing only; the compatibility and lifecycle checks above are also required
-for a production reader:
+The example below illustrates lookup and parsing only; the compatibility and
+lifecycle checks above are also required for a production reader:
 
 ```cpp
 TArray<AActor> Endpoints;
-Gameplay::GetAllActorsWithTag(n"GIMP.MemoryEndpoint.lab.v1", Endpoints);
+Gameplay::GetAllActorsWithTag(n"GIMP", Endpoints);
 
 for (AActor Endpoint : Endpoints)
 {
@@ -104,9 +107,9 @@ for (AActor Endpoint : Endpoints)
 }
 ```
 
-The 16 KiB limit above is the lab's example bound, not a settled protocol limit.
-The lab polls every 250 ms and tests one provider; multi-provider handling and
-production scan costs remain unvalidated. Avoid a full actor scan every frame.
+The 16 KiB limit above is an example bound, not a settled protocol limit.
+Consumers could poll every 250 ms, for example, rather than scan every frame.
+Multi-provider handling and production scan costs remain to be validated.
 
 `Plugin::GetEnabledPluginNames()` can separately list enabled plugins for
 optional diagnostics. **It is not needed to read these endpoints and is not a
@@ -114,10 +117,8 @@ compatibility test:** the live report determines what a provider offers. No
 central registry file, advertised memory address, companion GIMP mod or hard
 provider/consumer dependency is needed for the demonstrated mechanism.
 
-See the [independent consumer source](experiments/memory-transport/consumer/GIMP-Memory-Consumer-Lab/Script/Consumer.as)
-and [provider source](experiments/memory-transport/provider/GIMP-Memory-Provider-Lab/Script/Provider.as)
-for the executed proof. Safe gameplay/save-load lifecycle handling remains to be
-validated before treating this as a production integration.
+Safe gameplay/save-load lifecycle handling remains to be validated before
+treating this as a production integration.
 
 ## Discovery and ownership
 
@@ -133,7 +134,7 @@ validated before treating this as a production integration.
 
 ## Dependencies
 
-The memory-only lab requires no shared runtime mod and no dependency between the
+GIMP requires no shared runtime mod and no dependency between the
 provider and consumer. Each publishes or discovers native endpoints independently.
 The protocol does not require players to install a separate GIMP package.
 
@@ -153,8 +154,8 @@ Health and mana would be independent channels:
 Rates are finite, nonnegative resource points per second. Restoring 1 HP every
 5 seconds corresponds to `0.2 HP/sec`. Only active sources contribute to an
 active-rate total. Consumers must avoid double-counting effects through both
-native detection and provider reports. The memory test does not implement these
-regeneration gameplay rules.
+native detection and provider reports. These regeneration gameplay rules are an example contract, not functionality
+implemented by GIMP itself.
 
 ## Still to validate
 

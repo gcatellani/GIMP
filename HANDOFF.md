@@ -26,3 +26,8 @@ Updated 2026-11-17 (Europe/Berlin).
 - GitHub origin:git@github.com:gcatellani/GIMP.git, branch main. Repository-local
   signing uses the user's passphrase-protected GPG key; never request its secret
   in chat. Generated assets remain local unless their publication is requested.
+
+- User selected the shared discovery tag `GIMP` and requested no lab mentions in
+  README. Updated README wording/code accordingly without restoring omitted text.
+  Historical experiment sources/evidence retain their original test tag; no new
+  runtime validation or game changes were performed for this documentation edit.
